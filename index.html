@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>方位指南针</title>
+    <title>你的床在哪里</title>
     <style>
         .compass {
             width: 200px;
@@ -14,13 +14,13 @@
         }
 
         .arrow {
-            width: 2px;
+            width: 5px;
             height: 100px;
-            background: red;
+            background: #44CCDD;
             position: absolute;
             left: 50%;
             transform-origin: bottom;
-            transition: transform 0.3s;
+            transition: transform 0.1s;
         }
 
         .input-container {
@@ -82,7 +82,7 @@
                         };
                     },
                     (error) => {
-                        console.error('Error getting location:', error);
+                        console.error('Error getting location', error);
                     },
                     { enableHighAccuracy: true }
                 );
