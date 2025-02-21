@@ -3,7 +3,17 @@
 <head>
     <title>你的床在哪里</title>
     <style>
-        header-text {
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #f0f0f0;
+        }
+
+        .header-text {
             position: fixed;
             top: 10px;
             width: 100%;
@@ -41,6 +51,9 @@
     </style>
 </head>
 <body>
+    <div id="header-text">Where is your bed?</div> 
+    
+    
     <div class="input-container">
         <input type="number" id="targetLat" step="any" placeholder="目标纬度">
         <input type="number" id="targetLng" step="any" placeholder="目标经度">
