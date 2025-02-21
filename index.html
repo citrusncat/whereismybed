@@ -1,162 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compass Pointing to Target</title>
+    <title>方位指南针</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
-            flex-direction: column;
-        }
-
-        #compass-container {
-            position: relative;
-            text-align: center;
-        }
-
-        #compass {
-            position: relative;
+        .compass {
             width: 200px;
             height: 200px;
-            border: 10px solid #333;
             border-radius: 50%;
-            background-color: #fff;
-            margin-bottom: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            border: 2px solid #333;
+            position: relative;
+            margin: 20px auto;
+            background: #f0f0f0;
         }
 
-        #needle {
+        .arrow {
+            width: 2px;
+            height: 100px;
+            background: red;
             position: absolute;
-            width: 4px;
-            height: 80px;
-            background-color: red;
-            top: 10%;
             left: 50%;
-            transform-origin: 50% 100%;
-            transition: transform 0.1s ease-out;
-            transform: rotate(0deg);
-            margin-left: -2px;
+            transform-origin: bottom;
+            transition: transform 0.3s;
         }
 
-        #direction {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        input, button {
-            margin: 10px;
-            padding: 8px;
-            font-size: 14px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-
-        @media (max-width: 600px) {
-            #compass {
-                width: 150px;
-                height: 150px;
-            }
+        .input-container {
+            text-align: center;
+            margin: 20px;
         }
     </style>
 </head>
 <body>
-    <div>
-        <label for="latitude">Target Latitude:</label>
-        <input type="number" id="latitude" placeholder="Target Latitude" step="any">
-        <label for="longitude">Target Longitude:</label>
-        <input type="number" id="longitude" placeholder="Target Longitude" step="any">
-        <button onclick="setTarget()">Set Target</button>
+    <div class="input-container">
+        <input type="number" id="targetLat" step="any" placeholder="目标纬度">
+        <input type="number" id="targetLng" step="any" placeholder="目标经度">
+        <button onclick="startTracking()">开始追踪</button>
     </div>
-
-    <div id="compass-container">
-        <div id="compass">
-            <div id="needle"></div>
-        </div>
-        <div id="direction">Current Heading: <span id="heading">0</span>°</div>
+    <div class="compass">
+        <div class="arrow"></div>
     </div>
 
     <script>
-        const needle = document.getElementById('needle');
-        const headingElement = document.getElementById('heading');
-        let currentLat, currentLon, targetLat, targetLon;
+        let watchId = null;
+        let currentPosition = null;
+        let targetPosition = null;
 
-        // 获取用户当前的位置
-        function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    currentLat = position.coords.latitude;
-                    currentLon = position.coords.longitude;
-                    console.log("Current Location:", currentLat, currentLon);
-                    updateCompass();
-                });
-            } else {
-                alert("Geolocation is not supported by this browser.");
-            }
-        }
-
-        // 计算方位角
-        function calculateAzimuth() {
-            const φ1 = currentLat * Math.PI / 180; // 转换为弧度
-            const φ2 = targetLat * Math.PI / 180;
-            const Δλ = (targetLon - currentLon) * Math.PI / 180;
+        function calculateBearing(startLat, startLng, endLat, endLng) {
+            // 将角度转换为弧度
+            const toRad = deg => deg * Math.PI / 180;
+            
+            const φ1 = toRad(startLat);
+            const φ2 = toRad(endLat);
+            const Δλ = toRad(endLng - startLng);
 
             const y = Math.sin(Δλ) * Math.cos(φ2);
-            const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-            const azimuth = Math.atan2(y, x) * 180 / Math.PI; // 转换回角度
-
-            return (azimuth + 360) % 360; // 保证结果是0-360度
+            const x = Math.cos(φ1) * Math.sin(φ2) -
+                      Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+            return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
         }
 
-        // 更新目标经纬度
-        function setTarget() {
-            targetLat = parseFloat(document.getElementById('latitude').value);
-            targetLon = parseFloat(document.getElementById('longitude').value);
-            if (isNaN(targetLat) || isNaN(targetLon)) {
-                alert("Please enter valid latitude and longitude.");
-                return;
+        function updateCompass(alpha, bearing) {
+            const arrow = document.querySelector('.arrow');
+            // 计算设备朝向与目标方位之间的角度差
+            const direction = (360 - alpha + bearing) % 360;
+            arrow.style.transform = `rotate(${direction}deg)`;
+        }
+
+        function startTracking() {
+            // 获取目标位置
+            targetPosition = {
+                lat: parseFloat(document.getElementById('targetLat').value),
+                lng: parseFloat(document.getElementById('targetLng').value)
+            };
+
+            // 请求地理位置权限
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        currentPosition = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                    },
+                    (error) => {
+                        console.error('Error getting location:', error);
+                    },
+                    { enableHighAccuracy: true }
+                );
             }
-            updateCompass();
-        }
 
-        // 更新指南针
-        function updateCompass() {
-            if (currentLat !== undefined && currentLon !== undefined && targetLat !== undefined && targetLon !== undefined) {
-                const azimuth = calculateAzimuth();
-                needle.style.transform = `rotate(${azimuth}deg)`; // 根据方位角旋转指针
-                headingElement.innerText = Math.round(azimuth); // 更新当前方位角显示
+            // 请求设备方向权限
+            if (typeof DeviceOrientationEvent !== 'undefined' && 
+                typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation);
+                        }
+                    });
             } else {
-                alert("Please wait for your current location.");
+                window.addEventListener('deviceorientation', handleOrientation);
+            }
+
+            function handleOrientation(event) {
+                if (!currentPosition || !targetPosition) return;
+                
+                // 计算目标方位角
+                const bearing = calculateBearing(
+                    currentPosition.lat,
+                    currentPosition.lng,
+                    targetPosition.lat,
+                    targetPosition.lng
+                );
+
+                // 获取设备朝向（iOS和Android处理方式不同）
+                const alpha = event.webkitCompassHeading || 
+                             (360 - event.alpha); // 根据设备调整
+
+                updateCompass(alpha, bearing);
             }
         }
 
-        // 初始化获取当前经纬度
-        getCurrentLocation();
-
-        // 监听设备方向变化，更新指南针的角度
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", function(event) {
-                const alpha = event.alpha;
-                if (alpha !== null) {
-                    // 设备方向角度更新
-                    needle.style.transform = `rotate(${alpha}deg)`;
-                    headingElement.innerText = Math.round(alpha); // 更新角度
-                }
-            }, false);
-        } else {
-            alert("DeviceOrientationEvent not supported on this device.");
+        // 停止追踪时调用（可选）
+        function stopTracking() {
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+            window.removeEventListener('deviceorientation', handleOrientation);
         }
     </script>
 </body>
