@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>你的床在哪里</title>
+    <title>你的床在哪里 where's your bed
+    </title>
     <style>
         body{
             margin: 0;
@@ -38,7 +39,7 @@
         .arrow {
             width: 5px;
             height: 100px;
-            background: #44CCDD;
+            background: #77BBDD;
             position: absolute;
             left: 50%;
             transform-origin: bottom;
@@ -56,9 +57,9 @@
     
     
     <div class="input-container">
-        <input type="number" id="targetLat" step="any" placeholder="目标纬度">
-        <input type="number" id="targetLng" step="any" placeholder="目标经度">
-        <button onclick="startTracking()">开始追踪</button>
+        <input type="number" id="targetLat" step="any" placeholder="latitude">
+        <input type="number" id="targetLng" step="any" placeholder="longitude">
+        <button onclick="startTracking()">locate</button>
     </div>
     <div class="compass">
         <div class="arrow"></div>
