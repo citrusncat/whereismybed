@@ -3,15 +3,16 @@
 <head>
     <title>你的床在哪里</title>
     <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            background-color: #f0f0f0;
-         }
+        header-text {
+            position: fixed;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            z-index: 10; /* 确保文字在所有元素上方 */
+        }
 
         .compass {
             width: 200px;
