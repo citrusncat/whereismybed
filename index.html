@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>你的床在哪里 where's your bed
-    </title>
+    <title>你的床在哪里 where's your bed</title>
     <style>
         body{
             margin: 0;
@@ -13,7 +12,6 @@
             flex-direction: column;
             background-color: #f0f0f0;
         }
-        
 
         .header-text {
             position: fixed;
@@ -54,7 +52,6 @@
 </head>
 <body>
     <div id="header-text">Where's your bed?</div> 
-    
     
     <div class="input-container">
         <input type="number" id="targetLat" step="any" placeholder="latitude">
@@ -98,6 +95,24 @@
                 lng: parseFloat(document.getElementById('targetLng').value)
             };
 
+            // 校验目标经纬度
+            if (isNaN(targetPosition.lat) || isNaN(targetPosition.lng)) {
+                alert("请输入有效的纬度和经度。");
+                return;
+            }
+
+            // 校验纬度范围（-90到90）
+            if (targetPosition.lat < -90 || targetPosition.lat > 90) {
+                alert("纬度必须在 -90 到 90 之间。");
+                return;
+            }
+
+            // 校验经度范围（-180到180）
+            if (targetPosition.lng < -180 || targetPosition.lng > 180) {
+                alert("经度必须在 -180 到 180 之间。");
+                return;
+            }
+
             // 请求地理位置权限
             if (navigator.geolocation) {
                 watchId = navigator.geolocation.watchPosition(
@@ -109,9 +124,12 @@
                     },
                     (error) => {
                         console.error('Error getting location', error);
+                        alert("无法获取位置，请检查设置。");
                     },
                     { enableHighAccuracy: true }
                 );
+            } else {
+                alert("此浏览器不支持地理位置功能。");
             }
 
             // 请求设备方向权限
